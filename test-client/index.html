@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>d3-force-linear</title>
+</head>
+
+<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="https://d3js.org/d3.v4.js"></script>
+<!--<script src="https://d3js.org/d3.v4.min.js"></script>-->
+<script src="../build/d3-force-linear.js"></script>
+
+<div id="start">restart</div>
+<script>
+    var width = 960,
+        height = 700,
+        forceY = 0.01, // forceY: higher value pushes nodes more vertically, lower value let te nodes spread more across x
+        alphaRate = 2, // alphaRate: higher value resolve faster
+        alphaPartial = 0.8; // alphaPartial: higher value resolve faster but has greater error
+
+    var n = 1000, // total number of nodes
+        m = 10; // number of distinct clusters
+    var nodes = d3.range(n).map(function () {
+        var i = Math.floor(Math.random() * m),
+            r = Math.sqrt((i + 1) / m * -Math.log(Math.random())) * 5,
+            d = {
+                radius: r,
+                x: Math.cos(i / m * 2 * Math.PI) * 150 + width / 2 + Math.random(),
+                y: 200,
+                idealcx: Math.cos(i / m * 2 * Math.PI) * 150 + width / 2 + Math.random(),
+                idealcy: 200
+            };
+        return d;
+    });
+
+    var color = function (val) { // color to visualize distance to the ideal x position
+        var frac = Math.min(1, Math.abs(val) / 50);
+        if (val > 0.1) {
+            return d3.interpolate('yellow', 'red')(frac);
+        }
+        if (val < -0.1) {
+            return d3.interpolate('yellow', 'blue')(frac);
+        }
+        return 'green'
+    };
+
+    var nodes = d3.initializeLinearPack(nodes); // initial nodes position as spiral
+
+    function layoutTick () {
+        var alpha = alphaPartial * Math.pow(simulation.alpha(), alphaRate);
+        simulation.force('linearPack', d3.linearPack(alpha, forceY));
+
+        circles.attr("cx", function(d) {
+                    return d.x;
+                })
+                .attr("cy", function(d) {
+                    return d.y;
+                })
+                .style("fill", function(d) {
+                    return color(d.x - d.idealcx); // color by distance
+                });
+    }
+
+    var simulation = d3.forceSimulation()
+            .on('tick', layoutTick)
+            .nodes(nodes);
+
+    var svg = d3.select('body').append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+    var circles = svg.selectAll('circle')
+            .data(nodes)
+            .enter().append('circle')
+            .style('fill', function (d) {
+                return 'red';
+            })
+            .attr("cx", function (d) {
+                return d.x;
+            })
+            .attr("cy", function (d) {
+                return d.y;
+            })
+            .attr('r', function (d) {
+                return d.radius;
+            })
+            .style("opacity", 0.5);
+
+    $('#start').click(function () {
+        forceY = 1;
+        simulation.alpha(1).restart(); // restart linear pack
+    });
+</script>
+</body>
+</html>
