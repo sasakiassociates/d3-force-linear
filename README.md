@@ -38,6 +38,8 @@ for tick in ticks
 - quickly cooling down to stable positions
 - parameters to easily control the `shifting error` and `cooling down speed`
 
+![](img/compare.png?raw=true "performance compare")
+
 ## Usage
 ### Accessing the module
 The install method you use determines the syntax for accessing the module in your code:
